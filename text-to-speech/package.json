@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest --detectOpenHandles --coverage",
     "start:dev": "nodemon --exec npm start",
     "start": "npm run lint && node src/index.js --unhandled-rejections=warn",
     "lint": "eslint src/**/*.js --fix"
@@ -31,15 +31,18 @@
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.1.4",
+    "is-typed-array": "^1.1.4",
     "jest": "^26.4.2",
     "nodemon": "^2.0.7",
-    "prettier": "^2.1.2"
+    "prettier": "^2.1.2",
+    "supertest": "^6.1.1"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
     "buffer": "^6.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "is-stream": "^2.0.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.14.1"
   },
   "prettier": {
@@ -47,5 +50,8 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
+  },
+  "jest": {
+    "verbose": true
   }
 }
