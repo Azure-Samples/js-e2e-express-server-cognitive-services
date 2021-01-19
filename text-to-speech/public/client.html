@@ -9,67 +9,62 @@
 <body>
 
   <div id="content" style="display:none">
+    <h1 style="font-weight:500;">Microsoft Cognitive Services Speech </h1>
+    <h2>npm: microsoft-cognitiveservices-speech-sdk</h2> 
     <table width="100%">
       <tr>
         <td></td>
         <td>
-          <h1 style="font-weight:500;">Microsoft Cognitive Services Speech SDK JavaScript Quickstart</h1>
+          <a href="https://docs.microsoft.com/azure/cognitive-services/speech-service/get-started" target="_blank">Azure
+            Cognitive Services Speech Documentation</a>
         </td>
       </tr>
       <tr>
-        <td align="right"><a href="https://docs.microsoft.com/azure/cognitive-services/speech-service/get-started"
-            target="_blank">Resource</a>:</td>
+        <td align="right">Your Speech Resource Key</td>
         <td>
-          <div>
-            <input id="resourceKey" type="text" size="40" placeholder="Your resource key (32 characters)"
-              value="">
-          </div>
-          <div>
-            <input id="resourceRegion" type="text" size="40" placeholder="Your resource region" value="eastus"></div>
+
+          <input id="resourceKey" type="text" size="40" placeholder="Your resource key (32 characters)" value=""
+            onblur="updateSrc()">
+
+      </tr>
+      <tr>
+        <td align="right">Your Speech Resource region</td>
+        <td>
+          <input id="resourceRegion" type="text" size="40" placeholder="Your resource region" value="eastus"
+            onblur="updateSrc()">
+
         </td>
       </tr>
       <tr>
         <td align="right" valign="top">Input Text (max 255 char)</td>
-        <td><textarea id="phraseDiv" style="display: inline-block;width:500px;height:50px" maxlength="255" >all good men must come to the aid</textarea></td>
+        <td><textarea id="phraseDiv" style="display: inline-block;width:500px;height:50px" maxlength="255"
+            onblur="updateSrc()">all good men must come to the aid</textarea></td>
       </tr>
       <tr>
-        <td></td>
-        <td>
-        </td>
-      </tr>
-      <tr>
-        <td align="right" valign="top">
-          Audio Result
+        <td align="right">
+          Stream directly from Azure Cognitive Services
         </td>
         <td>
           <div>
-            Stream directly from Azure Cognitive Services
+            <button id="clientAudioAzure" onclick="getSpeechFromAzure()">Get directly from Azure</button>
           </div>
-          <button id="prepareSourceQueryStrings" onclick="updateSrc()">Prepare audio controls (append query string)</button>
-          <button id="startSpeakTextAsyncButton">Start Text to Speech</button>
+        </td>
+      </tr>
 
-          <div id="streamByFile" >
-            <div>Stream audio from file on server</div>
-            <audio id="audioFile" controls preload="none" >
-              <source src="http://localhost:3000/text-to-speech-file" type="audio/mpeg">
-              <p>Your browser doesn't support HTML5 audio. Here is
-                a <a href="myAudio.mp4">link to the audio</a> instead.</p>
-            </audio>
-          </div>
-          <hr>
-          <div id="streamByStream" >
-            <div>Stream audio from buffer on server</div>
-            <audio id="audioStream" controls preload="none">
-              <source src="http://localhost:3000/text-to-speech-stream" type="audio/mpeg">
-              <p>Your browser doesn't support HTML5 audio. Here is
-                a <a href="myAudio.mp4">link to the audio</a> instead.</p>
-            </audio>
-          </div>
-          <hr>
-          <div id="warning">
-            <h1 style="font-weight:500;">Speech Recognition Speech SDK not found
-              (microsoft.cognitiveservices.speech.sdk.bundle.js missing).</h1>
-          </div>
+      <tr>
+        <td align="right">
+          Stream audio from file on server</td>
+        <td>
+          <audio id="serverAudioFile" controls preload="none" onerror="DisplayError()">
+          </audio>
+        </td>
+      </tr>
+
+      <tr>
+        <td align="right">Stream audio from buffer on server</td>
+        <td>
+          <audio id="serverAudioStream" controls preload="none" onerror="DisplayError()">
+          </audio>
         </td>
       </tr>
     </table>
@@ -85,104 +80,124 @@
     // status fields and start button in UI
     var phraseDiv;
     var resultDiv;
-    var startSpeakTextAsyncButton;
 
     // subscription key and region for speech services.
-    var subscriptionKey, serviceRegion;
+    var resourceKey = null;
+    var resourceRegion = "eastus";
     var authorizationToken;
     var SpeechSDK;
     var synthesizer;
 
-    function updateSrc(){
-      
-      console.log("audio control div clicked");
+    var phrase = "all good men must come to the aid"
+    var queryString = null;
 
-      const resourceKey = document.getElementById('resourceKey').value;
-      const resourceRegion  = document.getElementById('resourceRegion').value;
-      const phrase = encodeURIComponent(document.getElementById('phraseDiv').value)
-      const queryString = `region=${resourceRegion}&key=${resourceKey}&phrase=${phrase}`; 
+    var audioType = "audio/mpeg";
+    var serverAudioStreamSrc = "http://localhost:3000/text-to-speech";
+    var serverAudioFileSrc = "http://localhost:3000/text-to-speech";
 
-      const byFileSrc = `http://localhost:3000/text-to-speech-file?${queryString}`
-      const byStreamSrc = `http://localhost:3000/text-to-speech-stream?${queryString}`
-      
-      console.log(`byFileSrc = ${byFileSrc}`)
-      console.log(`byStreamSrc = ${byStreamSrc}`)
-      
-      // append query string to src
-      var audioControlFile = document.getElementById('audioFile');
-      audioControlFile.src = byFileSrc;
+    document.getElementById('serverAudioStream').disabled = true;
+    document.getElementById('serverAudioFile').disabled = true;
+    document.getElementById('clientAudioAzure').disabled = true;
 
-      // append query string to src
-      var audioControlStream = document.getElementById('audioStream');
-      audioControlStream.src = byStreamSrc;
+    // update src URL query string for Express.js server
+    function updateSrc() {
+
+      // input values
+      resourceKey = document.getElementById('resourceKey').value.trim();
+      resourceRegion = document.getElementById('resourceRegion').value.trim();
+      phrase = document.getElementById('phraseDiv').value.trim();
+
+      // server control - by file
+      var serverAudioFileControl = document.getElementById('serverAudioFile');
+      queryString += `%file=true`;
+      const fileQueryString = `file=true&region=${resourceRegion}&key=${resourceKey}&phrase=${phrase}`;
+      serverAudioFileControl.src = `${serverAudioFileSrc}?${fileQueryString}`;
+      console.log(serverAudioFileControl.src)
+      serverAudioFileControl.type = "audio/mpeg";
+      serverAudioFileControl.disabled = false;
+
+      // server control - by stream
+      var serverAudioStreamControl = document.getElementById('serverAudioStream');
+      const streamQueryString = `region=${resourceRegion}&key=${resourceKey}&phrase=${phrase}`;
+      serverAudioStreamControl.src = `${serverAudioStreamSrc}?${streamQueryString}`;
+      console.log(serverAudioStreamControl.src)
+      serverAudioStreamControl.type = "audio/mpeg";
+      serverAudioStreamControl.disabled = false;
+
+      // client control
+      var clientAudioAzureControl = document.getElementById('clientAudioAzure');
+      //clientAudioAzureControl.src = `http://localhost:3000` // placeholder
+      clientAudioAzureControl.disabled = false;
       
-      console.log(`audioControlStream.src = ${audioControlStream.src}`)
-      console.log(`audioControlFile.src = ${audioControlFile.src}`)
-       
     }
     
-    document.addEventListener("DOMContentLoaded", function () {
-      startSpeakTextAsyncButton = document.getElementById("startSpeakTextAsyncButton");
-      subscriptionKey = document.getElementById("subscriptionKey");
-      serviceRegion = document.getElementById("serviceRegion");
-      phraseDiv = document.getElementById("phraseDiv");
-      
-      startSpeakTextAsyncButton.addEventListener("click", function () {
-        startSpeakTextAsyncButton.disabled = true;
-        phraseDiv.innerHTML = "";
+    function DisplayError(error){
+      window.alert(JSON.stringify(error));
+    }
 
-        // if we got an authorization token, use the token. Otherwise use the provided subscription key
-        var speechConfig;
-        if (authorizationToken) {
-          speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(authorizationToken, serviceRegion.value);
-        } else {
-          if (subscriptionKey.value === "" || subscriptionKey.value === "subscription") {
-            alert("Please enter your Microsoft Cognitive Services Speech subscription key!");
-            startSpeakTextAsyncButton.disabled = false;
-            return;
+    // Client-side request directly to Azure Cognitive Services
+    function getSpeechFromAzure() {
+
+      // authorization for Speech service
+      var speechConfig = SpeechSDK.SpeechConfig.fromSubscription(resourceKey, resourceRegion);
+
+      // new Speech object
+      synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+
+      synthesizer.speakTextAsync(
+        phrase,
+        function (result) {
+
+          // Success function
+
+          // display status
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+
+            // load client-side audio control from Azure response
+            audioElement = document.getElementById("clientAudioAzure");
+            const blob = new Blob([result.audioData], { type: "audio/mpeg" });
+            const url = window.URL.createObjectURL(blob);
+            //audioElement.src = url;
+            //audioElement.type = "audio/mpeg";
+            //audioElement.pause();
+
+          } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
+            // display Error
+            throw (result.errorDetails);
           }
-          speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey.value, serviceRegion.value);
-        }
 
-        synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig);
+          // clean up
+          synthesizer.close();
+          synthesizer = undefined;
+        },
+        function (err) {
 
-        let inputText = phraseDiv.value;
-        synthesizer.speakTextAsync(
-          inputText,
-          function (result) {
-            startSpeakTextAsyncButton.disabled = false;
-            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-              resultDiv.innerHTML += "synthesis finished for [" + inputText + "].\n";
-            } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
-              resultDiv.innerHTML += "synthesis failed. Error detail: " + result.errorDetails + "\n";
-            }
-            window.console.log(result);
-            synthesizer.close();
-            synthesizer = undefined;
-          },
-          function (err) {
-            startSpeakTextAsyncButton.disabled = false;
-            resultDiv.innerHTML += "Error: ";
-            resultDiv.innerHTML += err;
-            resultDiv.innerHTML += "\n";
-            window.console.log(err);
+          // Error function
+          throw(err);
+          audioElement = document.getElementById("audioControl");
+          audioElement.disabled = true;
 
-            synthesizer.close();
-            synthesizer = undefined;
-          });
-      });
+          // clean up
+          synthesizer.close();
+          synthesizer = undefined;
+        });
 
+    }
+
+    // Initialization
+    document.addEventListener("DOMContentLoaded", function () {
+
+      var clientAudioAzureControl = document.getElementById("clientAudioAzure");
+      var resultDiv = document.getElementById("resultDiv");
+
+      resourceKey = document.getElementById('resourceKey').value;
+      resourceRegion = document.getElementById('resourceRegion').value;
+      phrase = document.getElementById('phraseDiv').value;
       if (!!window.SpeechSDK) {
         SpeechSDK = window.SpeechSDK;
-        startSpeakTextAsyncButton.disabled = false;
+        clientAudioAzure.disabled = false;
 
         document.getElementById('content').style.display = 'block';
-        document.getElementById('warning').style.display = 'none';
-
-        // in case we have a function for getting an authorization token, call it.
-        if (typeof RequestAuthorizationToken === "function") {
-          RequestAuthorizationToken();
-        }
       }
     });
 
