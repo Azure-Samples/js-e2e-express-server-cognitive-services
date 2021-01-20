@@ -10,7 +10,7 @@
 
   <div id="content" style="display:none">
     <h1 style="font-weight:500;">Microsoft Cognitive Services Speech </h1>
-    <h2>npm: microsoft-cognitiveservices-speech-sdk</h2> 
+    <h2>npm: microsoft-cognitiveservices-speech-sdk</h2>
     <table width="100%">
       <tr>
         <td></td>
@@ -92,8 +92,7 @@
     var queryString = null;
 
     var audioType = "audio/mpeg";
-    var serverAudioStreamSrc = "http://localhost:3000/text-to-speech";
-    var serverAudioFileSrc = "http://localhost:3000/text-to-speech";
+    var serverSrc = "/text-to-speech";
 
     document.getElementById('serverAudioStream').disabled = true;
     document.getElementById('serverAudioFile').disabled = true;
@@ -111,7 +110,7 @@
       var serverAudioFileControl = document.getElementById('serverAudioFile');
       queryString += `%file=true`;
       const fileQueryString = `file=true&region=${resourceRegion}&key=${resourceKey}&phrase=${phrase}`;
-      serverAudioFileControl.src = `${serverAudioFileSrc}?${fileQueryString}`;
+      serverAudioFileControl.src = `${serverSrc}?${fileQueryString}`;
       console.log(serverAudioFileControl.src)
       serverAudioFileControl.type = "audio/mpeg";
       serverAudioFileControl.disabled = false;
@@ -119,19 +118,18 @@
       // server control - by stream
       var serverAudioStreamControl = document.getElementById('serverAudioStream');
       const streamQueryString = `region=${resourceRegion}&key=${resourceKey}&phrase=${phrase}`;
-      serverAudioStreamControl.src = `${serverAudioStreamSrc}?${streamQueryString}`;
+      serverAudioStreamControl.src = `${serverSrc}?${streamQueryString}`;
       console.log(serverAudioStreamControl.src)
       serverAudioStreamControl.type = "audio/mpeg";
       serverAudioStreamControl.disabled = false;
 
       // client control
       var clientAudioAzureControl = document.getElementById('clientAudioAzure');
-      //clientAudioAzureControl.src = `http://localhost:3000` // placeholder
       clientAudioAzureControl.disabled = false;
-      
+
     }
-    
-    function DisplayError(error){
+
+    function DisplayError(error) {
       window.alert(JSON.stringify(error));
     }
 
@@ -173,7 +171,7 @@
         function (err) {
 
           // Error function
-          throw(err);
+          throw (err);
           audioElement = document.getElementById("audioControl");
           audioElement.disabled = true;
 
