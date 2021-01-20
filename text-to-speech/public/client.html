@@ -155,9 +155,6 @@
             audioElement = document.getElementById("clientAudioAzure");
             const blob = new Blob([result.audioData], { type: "audio/mpeg" });
             const url = window.URL.createObjectURL(blob);
-            //audioElement.src = url;
-            //audioElement.type = "audio/mpeg";
-            //audioElement.pause();
 
           } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
             // display Error
