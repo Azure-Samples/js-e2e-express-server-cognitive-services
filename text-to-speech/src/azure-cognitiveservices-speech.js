@@ -1,5 +1,5 @@
 const sdk = require('microsoft-cognitiveservices-speech-sdk');
-const { Buffer } = require('buffer/');
+const { Buffer } = require('buffer');
 const { PassThrough } = require('stream');
 const fs = require('fs');
 
