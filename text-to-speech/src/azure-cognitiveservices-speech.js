@@ -35,11 +35,12 @@ const textToSpeech = async (key, region, text, filename)=> {
                 
                 const { audioData } = result;
 
+                synthesizer.close();
+                
                 if (filename) {
                     
                     // return stream from file
                     const audioFile = fs.createReadStream(filename);
-                    synthesizer.close();
                     resolve(audioFile);
                     
                 } else {
@@ -47,7 +48,6 @@ const textToSpeech = async (key, region, text, filename)=> {
                     // return stream from memory
                     const bufferStream = new PassThrough();
                     bufferStream.end(Buffer.from(audioData));
-                    synthesizer.close();
                     resolve(bufferStream);
                 }
             },
