@@ -11,12 +11,14 @@ const fs = require('fs');
  * @param {*} key your resource key
  * @param {*} region your resource region
  * @param {*} text text to convert to audio/speech
- * @param {*} filename optional - best for long text - temp file for converted speech/audio
+ * @param {*} filename optional - best for long text - temp file for converted speech/audio, for examples see test file
  */
-const textToSpeech = async (key, region, text, filename)=> {
+const textToSpeech = async (key, region, text, filename=null)=> {
     
     // convert callback function to promise
     return new Promise((resolve, reject) => {
+        
+        if(!key || !region ||!text) throw Error("Required function parameters are not allowed to be empty")
         
         const speechConfig = sdk.SpeechConfig.fromSubscription(key, region);
         speechConfig.speechSynthesisOutputFormat = 5; // mp3
